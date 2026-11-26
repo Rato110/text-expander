@@ -1,0 +1,7 @@
+# Rust build output and local logs
+/target/
+build.log
+*.part
+.DS_Store
+/build-appimage/
+*.AppImage

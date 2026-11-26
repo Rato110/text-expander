@@ -1,0 +1,72 @@
+name: build
+
+# Builds the program on every push. A mistake shows up as a red cross on GitHub.
+# The AppImage (one file that works on most Linux computers) can be downloaded from the
+# finished run (Artifacts), and from the Releases page when a version tag such as v0.18.0 is pushed.
+on:
+  push:
+    tags: ["v*"]
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libxkbcommon-dev libwayland-dev \
+            libgl1-mesa-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libxcb1-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check that it compiles
+        run: cargo check --release
+
+  appimage:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools and libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libxkbcommon-dev libwayland-dev \
+            libgl1-mesa-dev libx11-dev libxcursor-dev libxrandr-dev libxi-dev libxcb1-dev \
+            cmake git curl patchelf desktop-file-utils python3-pip \
+            tesseract-ocr tesseract-ocr-eng tesseract-ocr-dan pulseaudio-utils
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build the AppImage
+        run: bash packaging/build-appimage.sh
+      - name: Upload the AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: text-expander-appimage
+          path: Text_Expander-*-x86_64.AppImage
+          if-no-files-found: error
+      - name: Publish on the Releases page (version tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Text_Expander-*-x86_64.AppImage
+
+  # Windows is on hold. Run this by hand from the Actions tab when work on it continues.
+  windows:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release
+      - name: Upload the Windows program
+        uses: actions/upload-artifact@v4
+        with:
+          name: text-expander-windows
+          path: target/release/expander.exe
+          if-no-files-found: error

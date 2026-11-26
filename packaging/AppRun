@@ -1,0 +1,16 @@
+#!/bin/sh
+# Starts Text Expander from inside the AppImage.
+HERE="$(dirname "$(readlink -f "$0")")"
+export APPDIR="${APPDIR:-$HERE}"
+
+# the helpers that are part of the bundle come first
+export PATH="$APPDIR/usr/bin:$PATH"
+export TESSDATA_PREFIX="$APPDIR/usr/share/tessdata"
+
+# tells the program that the speech and voice engines are inside the AppImage
+export EXPANDER_BUNDLED=1
+export EXPANDER_PYTHON="$APPDIR/usr/python/bin/python3"
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONNOUSERSITE=1
+
+exec "$APPDIR/usr/bin/expander" "$@"

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Text Expander
+Comment=Text expander, OCR, offline voice typing and read aloud
+Exec=expander
+Icon=expander
+Categories=Utility;
+Terminal=false
